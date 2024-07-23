@@ -23,7 +23,8 @@ export class Registry {
         for (let entry of entries) {
             const item = {
                 favorite: entry.isFavorite(),
-                mimetype: entry.mimetype()
+                mimetype: entry.mimetype(),
+                sensitive: entry.isSensitive(),
             };
 
             registryContent.push(item);
@@ -209,6 +210,7 @@ export class ClipboardEntry {
     #mimetype;
     #bytes;
     #favorite;
+    #sensitive
 
     static #decode (contents) {
         return Uint8Array.from(contents.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
@@ -223,6 +225,7 @@ export class ClipboardEntry {
     static async fromJSON (jsonEntry) {
         const mimetype = jsonEntry.mimetype || 'text/plain;charset=utf-8';
         const favorite = jsonEntry.favorite;
+        const sensitive = jsonEntry.sensitive;
         let bytes;
 
         if (ClipboardEntry.__isText(mimetype)) {
@@ -262,13 +265,14 @@ export class ClipboardEntry {
             }
         }
 
-        return new ClipboardEntry(mimetype, bytes, favorite);
+        return new ClipboardEntry(mimetype, bytes, favorite, sensitive);
     }
 
-    constructor (mimetype, bytes, favorite) {
+    constructor (mimetype, bytes, favorite, sensitive) {
         this.#mimetype = mimetype;
         this.#bytes = bytes;
         this.#favorite = favorite;
+        this.#sensitive = sensitive || false;
     }
 
     #encode () {
@@ -298,6 +302,14 @@ export class ClipboardEntry {
 
     set favorite (val) {
         this.#favorite = !!val;
+    }
+
+    isSensitive() {
+        return this.#sensitive;
+    }
+
+    set sensitive (val) {
+        this.#sensitive = !!val;
     }
 
     isText () {
